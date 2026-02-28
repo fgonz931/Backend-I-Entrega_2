@@ -13,32 +13,27 @@ class ProductManager {
   }
 
   static async saveData(data) {
-    await fs.promises.writeFile(
-      this.#path,
-      JSON.stringify(data)
-    );
+    await fs.promises.writeFile(this.#path, JSON.stringify(data));
   }
 
   static async getProductById(id) {
     const products = await this.getData();
-    return products.find(p => p.id == id) || null;
+    return products.find((p) => p.id == id) || null;
   }
 
   static async createProduct(productData) {
     const products = await this.getData();
 
     const newProduct = {
-      id: products.length === 0
-        ? 1
-        : products[products.length - 1].id + 1,
+      id: products.length === 0 ? 1 : products[products.length - 1].id + 1,
       title: productData.title,
       description: productData.description,
       code: productData.code,
-      price: productData.price,
+      price: Number(productData.price),
       status: productData.status,
-      stock: productData.stock,
+      stock: Number(productData.stock),
       category: productData.category,
-      thumbnails: productData.thumbnails,
+      thumbnails: productData.thumbnails || [],
     };
 
     products.push(newProduct);
@@ -49,20 +44,29 @@ class ProductManager {
 
   static async updateProduct(id, updates) {
     const products = await this.getData();
-    const index = products.findIndex(p => p.id === id);
+    const index = products.findIndex((p) => p.id === id);
 
     if (index === -1) return null;
 
     products[index] = {
       ...products[index],
       ...updates,
-      id: products[index].id
+      id: products[index].id,
     };
 
     await this.saveData(products);
     return products[index];
   }
 
+  static async deleteProduct(id) {
+    const products = await this.getData();
+    const filteredProducts = products.filter((p) => p.id !== id);
+
+    if (products.length === filteredProducts.length) return null;
+
+    await this.saveData(filteredProducts);
+    return filteredProducts;
+  }
 }
 
 export default ProductManager;
